@@ -11,13 +11,11 @@
   <title>DeskThing</title>
   <link rel="stylesheet" href="./app.css">
 </head>
-<body>
+<body class="focusMode">
 
-<div class="timer-container">
-  <div class="time" id="timer">25:00</div>
-  <button id="start-btn">Start</button>
-  <button id="reset-btn">Reset</button>
-</div>
+<div id="config-mode-label" style="display: none">Rotate wheel to set time</div>
+<div id="timer">--:--</div>
+<div id="pomodoros"></div>
 
 <script src="./manifest.json"></script>
 <script src="./app.js"></script>
