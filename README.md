@@ -1,4 +1,5 @@
 # CarThing Pomodoro Timer
+More info on [Reddit](https://www.reddit.com/r/carthinghax/comments/1esdkse/transformed_into_a_pomodo_timer/)
 
 ## Installation on MacOS
 *Note: This manual is compiled from information in the 
