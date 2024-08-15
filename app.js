@@ -1,5 +1,5 @@
 (() => {
-  const CONFIG_BUTTON = 'Enter';
+  const START_BUTTON = 'Enter'; // Works same way as clicking on the screen
   const SKIP_BUTTON = 'Escape';
   const RESET_BUTTON = '1';
 
@@ -7,26 +7,16 @@
   let DEFAULT_RELAX_TIME = parseInt(localStorage.getItem('relaxTime'), 10) || 5 * 60;
   let collectedPomodoros = parseInt(localStorage.getItem('collectedPomodoros'), 10) || 0;
 
-  let isConfiguring = false;
   let currentState = 'focus'; // focus, relax
+  let isTimerStarted = false;
   let isTimerRunning = false;
   let timeLeft = DEFAULT_FOCUS_TIME;
 
-  const configModeLabel = document.getElementById('config-mode-label');
   const timerDisplay = document.getElementById('timer');
 
   function updateTimerDisplay() {
-    let value = timeLeft;
-    if (isConfiguring) {
-      if (currentState === 'focus') {
-        value = DEFAULT_FOCUS_TIME;
-      } else {
-        value = DEFAULT_RELAX_TIME
-      }
-    }
-
-    const minutes = Math.floor(value / 60);
-    const seconds = value % 60;
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
     timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
 
@@ -57,6 +47,7 @@
         break;
     }
 
+    isTimerStarted = false;
     isTimerRunning = false;
     updateTimerDisplay();
   }
@@ -72,12 +63,19 @@
       }
 
       if (timeLeft === 0) {
+        isTimerStarted = false;
         isTimerRunning = false;
         toggleState();
       }
 
       updateTimerDisplay();
     }
+  }
+
+  function start() {
+    isTimerStarted = true;
+    isTimerRunning = !isTimerRunning;
+    updateTimerDisplay();
   }
 
   updateTimerDisplay();
@@ -87,35 +85,18 @@
   }, 1000);
 
   document.addEventListener('click', (e) => {
-    if (isConfiguring) {
-      return;
-    }
-
-    isTimerRunning = !isTimerRunning;
-    updateTimerDisplay();
+    start();
   });
 
   document.addEventListener('keydown', (e) => {
     switch (e.key) {
-      case CONFIG_BUTTON:
-        if (isTimerRunning) {
-          const confirmed = confirm('This will stop the timer. Are you sure?');
-          if (!confirmed) {
-            return;
-          }
-        }
-
-        isTimerRunning = false;
-        isConfiguring = !isConfiguring;
-        configModeLabel.style.display = isConfiguring ? 'block' : 'none';
+      case START_BUTTON:
+        start();
         break;
 
       case SKIP_BUTTON:
-        if (isTimerRunning) {
-          const confirmed = confirm('This will stop the timer. Are you sure?');
-          if (!confirmed) {
-            return;
-          }
+        if (isTimerStarted && !confirm('This will stop the timer. Are you sure?')) {
+          break;
         }
 
         toggleState();
@@ -132,7 +113,7 @@
   });
 
   document.addEventListener('wheel', (e) => {
-    if (!isConfiguring) {
+    if (isTimerStarted) {
       return;
     }
 
