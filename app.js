@@ -14,6 +14,35 @@
 
   const timerDisplay = document.getElementById('timer');
 
+  updateTimerDisplay();
+  updatePomodorosDisplay();
+  setInterval(() => {
+    tick();
+  }, 1000);
+
+  document.addEventListener('click', () => start());
+
+  document.addEventListener('keydown', (e) => {
+    switch (e.key) {
+      case START_BUTTON:
+        start();
+        break;
+
+      case SKIP_BUTTON:
+        skip();
+        break;
+
+      case RESET_BUTTON:
+        reset();
+        break;
+    }
+  });
+
+  document.addEventListener('wheel', (e) => {
+    const isUp = e.deltaX > 0;
+    changeTimeSettings(isUp);
+  });
+
   function updateTimerDisplay() {
     const minutes = Math.floor(timeLeft / 60);
     const seconds = timeLeft % 60;
@@ -28,6 +57,26 @@
 
     const pomodorosDisplay = document.getElementById('pomodoros');
     pomodorosDisplay.textContent = str || 'Collect your first pomodoro!'
+  }
+
+  function tick() {
+    if (isTimerRunning) {
+      timeLeft--;
+
+      if (timeLeft === 0 && currentState === 'focus') {
+        collectedPomodoros++;
+        updatePomodorosDisplay();
+        localStorage.setItem('collectedPomodoros', collectedPomodoros);
+      }
+
+      if (timeLeft === 0) {
+        isTimerStarted = false;
+        isTimerRunning = false;
+        toggleState();
+      }
+
+      updateTimerDisplay();
+    }
   }
 
   function toggleState() {
@@ -52,70 +101,31 @@
     updateTimerDisplay();
   }
 
-  function tick() {
-    if (isTimerRunning) {
-      timeLeft--;
-
-      if (timeLeft === 0 && currentState === 'focus') {
-        collectedPomodoros++;
-        updatePomodorosDisplay();
-        localStorage.setItem('collectedPomodoros', collectedPomodoros);
-      }
-
-      if (timeLeft === 0) {
-        isTimerStarted = false;
-        isTimerRunning = false;
-        toggleState();
-      }
-
-      updateTimerDisplay();
-    }
-  }
-
   function start() {
     isTimerStarted = true;
     isTimerRunning = !isTimerRunning;
     updateTimerDisplay();
   }
 
-  updateTimerDisplay();
-  updatePomodorosDisplay();
-  setInterval(() => {
-    tick();
-  }, 1000);
-
-  document.addEventListener('click', () => start());
-
-  document.addEventListener('keydown', (e) => {
-    switch (e.key) {
-      case START_BUTTON:
-        start();
-        break;
-
-      case SKIP_BUTTON:
-        if (isTimerStarted && !confirm('This will stop the timer. Are you sure?')) {
-          break;
-        }
-
-        toggleState();
-        break;
-
-      case RESET_BUTTON:
-        collectedPomodoros = 0;
-        updatePomodorosDisplay();
-        localStorage.setItem('collectedPomodoros', collectedPomodoros);
-        break;
+  function skip() {
+    if (isTimerStarted && !confirm('Are you sure you want to skip the current interval?')) {
+      return;
     }
 
-    updateTimerDisplay();
-  });
+    toggleState();
+  }
 
-  document.addEventListener('wheel', (e) => {
+  function reset() {
+    collectedPomodoros = 0;
+    updatePomodorosDisplay();
+    localStorage.setItem('collectedPomodoros', collectedPomodoros);
+  }
+
+  function changeTimeSettings(isUp) {
     if (isTimerStarted) {
       return;
     }
 
-    const isUp = e.deltaX > 0;
     switch (currentState) {
       case 'focus':
         DEFAULT_FOCUS_TIME = isUp ? DEFAULT_FOCUS_TIME + 30 : DEFAULT_FOCUS_TIME - 30;
@@ -133,5 +143,5 @@
     }
 
     updateTimerDisplay();
-  });
+  }
 })();
