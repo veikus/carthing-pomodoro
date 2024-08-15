@@ -84,9 +84,7 @@
     tick();
   }, 1000);
 
-  document.addEventListener('click', (e) => {
-    start();
-  });
+  document.addEventListener('click', () => start());
 
   document.addEventListener('keydown', (e) => {
     switch (e.key) {
