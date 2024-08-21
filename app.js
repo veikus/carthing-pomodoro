@@ -163,9 +163,17 @@
   }
 
   function formatTime(seconds) {
-    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds - hours * 3600) / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+
+    const hoursStr = hours > 0 ? hours.toString() : '';
+    const minutesStr = minutes.toString().padStart(2, '0');
+    const secondsStr = remainingSeconds.toString().padStart(2, '0');
+
+    return hours
+      ? `${hoursStr}:${minutesStr}:${secondsStr}`
+      : `${minutesStr}:${secondsStr}`;
   }
 
   function changeTimeSettings(isUp) {
