@@ -4,27 +4,21 @@
   const RESET_BUTTON = 'm';
   const MODE_BUTTON = '1';
 
-  let DEFAULT_FOCUS_TIME = parseInt(localStorage.getItem('focusTime'), 10) || 20 * 60;
-  let DEFAULT_RELAX_TIME = parseInt(localStorage.getItem('relaxTime'), 10) || 5 * 60;
-  let viewMode = localStorage.getItem('viewMode') || 'pomodoros'; // pomodoros, totalTime
-  let collectedPomodoros = parseInt(localStorage.getItem('collectedPomodoros'), 10) || 0;
   let totalFocusTime = parseInt(localStorage.getItem('totalFocusTime'), 10) || 0;
   let totalRelaxTime = parseInt(localStorage.getItem('totalRelaxTime'), 10) || 0;
 
   let currentState = 'focus'; // focus, relax
-  let isTimerStarted = false;
   let isTimerRunning = false;
-  let timeLeft = DEFAULT_FOCUS_TIME;
+  let currentSessionTime = 0;
 
-  const timerDisplay = document.getElementById('timer');
+  const timerElem = document.getElementById('timer');
+  const footerElem = document.getElementById('pomodoros');
 
-  updateTimerDisplay();
-  updatePomodorosDisplay();
+  updateTimerInformation();
+  updateFooterInformation();
   setInterval(() => {
     tick();
   }, 1000);
-
-  document.addEventListener('click', () => start());
 
   document.addEventListener('keydown', (e) => {
     switch (e.key) {
@@ -39,46 +33,20 @@
       case RESET_BUTTON:
         reset();
         break;
-
-      case MODE_BUTTON:
-        toggleViewMode();
-        break;
     }
   });
 
-  document.addEventListener('wheel', (e) => {
-    const isUp = e.deltaX > 0;
-    changeTimeSettings(isUp);
-  });
-
-  function updateTimerDisplay() {
-    timerDisplay.textContent = formatTime(timeLeft);
+  function updateTimerInformation() {
+    timerElem.textContent = formatTime(currentSessionTime);
   }
 
-  function updatePomodorosDisplay() {
-    const pomodorosDisplay = document.getElementById('pomodoros');
-
-    switch (viewMode) {
-      case 'pomodoros': {
-        let str = '';
-        for (let i = 0; i < collectedPomodoros; i++) {
-          str += '🍅';
-        }
-
-        pomodorosDisplay.textContent = str || 'Collect your first pomodoro!';
-        break;
-      }
-
-      case 'totalTime': {
-        pomodorosDisplay.textContent =  `${formatTime(totalFocusTime)} | ${formatTime(totalRelaxTime)}`;
-        break;
-      }
-    }
+  function updateFooterInformation() {
+    footerElem.textContent =  `${formatTime(totalFocusTime)} | ${formatTime(totalRelaxTime)}`;
   }
 
   function tick() {
     if (isTimerRunning) {
-      timeLeft--;
+      currentSessionTime++;
 
       switch (currentState) {
         case 'focus':
@@ -91,22 +59,8 @@
           localStorage.setItem('totalRelaxTime', totalRelaxTime.toString());
       }
 
-      if (timeLeft === 0 && currentState === 'focus') {
-        collectedPomodoros++;
-        updatePomodorosDisplay();
-        localStorage.setItem('collectedPomodoros', collectedPomodoros);
-      }
-
-      if (timeLeft === 0) {
-        isTimerStarted = false;
-        isTimerRunning = false;
-        toggleState();
-      }
-
-      updateTimerDisplay();
-      if (viewMode === 'totalTime') {
-        updatePomodorosDisplay();
-      }
+      updateTimerInformation();
+      updateFooterInformation();
     }
   }
 
@@ -115,51 +69,39 @@
 
     switch (currentState) {
       case 'focus':
-        timeLeft = DEFAULT_RELAX_TIME;
         currentState = 'relax';
         body.className = 'relaxMode';
         break;
 
       case 'relax':
-        timeLeft = DEFAULT_FOCUS_TIME;
         currentState = 'focus';
         body.className = 'focusMode';
         break;
     }
 
-    isTimerStarted = false;
-    isTimerRunning = false;
-    updateTimerDisplay();
-  }
-
-  function toggleViewMode() {
-    viewMode = viewMode === 'pomodoros' ? 'totalTime' : 'pomodoros';
-    localStorage.setItem('viewMode', viewMode);
-    updatePomodorosDisplay();
+    currentSessionTime = 0;
+    updateTimerInformation();
   }
 
   function start() {
-    isTimerStarted = true;
     isTimerRunning = !isTimerRunning;
-    updateTimerDisplay();
+    updateTimerInformation();
+    updateFooterInformation();
   }
 
   function skip() {
-    if (isTimerStarted && !confirm('Are you sure you want to skip the current interval?')) {
-      return;
-    }
-
     toggleState();
   }
 
   function reset() {
-    collectedPomodoros = 0;
+    isTimerRunning = false;
+    currentSessionTime = 0;
     totalFocusTime = 0;
     totalRelaxTime = 0;
-    updatePomodorosDisplay();
-    localStorage.setItem('collectedPomodoros', collectedPomodoros);
     localStorage.setItem('totalFocusTime', totalFocusTime);
     localStorage.setItem('totalRelaxTime', totalRelaxTime);
+    updateTimerInformation();
+    updateFooterInformation();
   }
 
   function formatTime(seconds) {
@@ -174,29 +116,5 @@
     return hours
       ? `${hoursStr}:${minutesStr}:${secondsStr}`
       : `${minutesStr}:${secondsStr}`;
-  }
-
-  function changeTimeSettings(isUp) {
-    if (isTimerStarted) {
-      return;
-    }
-
-    switch (currentState) {
-      case 'focus':
-        DEFAULT_FOCUS_TIME = isUp ? DEFAULT_FOCUS_TIME + 30 : DEFAULT_FOCUS_TIME - 30;
-        DEFAULT_FOCUS_TIME = Math.max(30, DEFAULT_FOCUS_TIME);
-        timeLeft = DEFAULT_FOCUS_TIME;
-        localStorage.setItem('focusTime', DEFAULT_FOCUS_TIME);
-        break;
-
-      case 'relax':
-        DEFAULT_RELAX_TIME = isUp ? DEFAULT_RELAX_TIME + 30 : DEFAULT_RELAX_TIME - 30;
-        DEFAULT_RELAX_TIME = Math.max(30, DEFAULT_RELAX_TIME);
-        timeLeft = DEFAULT_RELAX_TIME;
-        localStorage.setItem('relaxTime', DEFAULT_RELAX_TIME);
-        break;
-    }
-
-    updateTimerDisplay();
   }
 })();
